@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><title>Eye → Space</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>
-:root{--bg:#010203;--fg:#6a7d99;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#010203;--fg:#6a7d99}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#010203;--fg:#6a7d99}}
 :root[data-theme="dark"]{--bg:#010203;--fg:#6a7d99}
 html,body{height:100%;margin:0;background:var(--bg)}
-body{display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:var(--fg);font:12px ui-sans-serif,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
-canvas{display:block}p{margin:10px 0 0;opacity:.7}
+body{overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{display:block;position:fixed;left:0;top:0}
 </style></head><body>
-<canvas id="c"></canvas><p> </p>
+<canvas id="c"></canvas>
 <script>
 const M=Math,TAU=M.PI*2,cv=document.getElementById('c'),ctx=cv.getContext('2d',{alpha:false});
 const rn32=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=M.imul(a^a>>>15,1|a);t=t+M.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
@@ -34,14 +34,14 @@ for(let i=0;i<NS;i++){SX[i]=R5()*2-1;SY[i]=R5()*2-1;SB[i]=.1+.9*R5()**3.5;const 
 let streaks=[],S={last:0,next:1e9};
 function reset(){S={last:0,next:1e9};streaks=[];for(let i=0;i<NS;i++)SD[i]=.06+R5()*.94}
 // layout
-let ROWS=coarse?22:30,COLS,W,H,CW,CH,FS,XC,YC,RSC,HSC,IDX,CR,CG,CB,LI,PM,VG,COLS_STR={};
+let QR=innerHeight>innerWidth?18:coarse?22:30,ROWS,COLS,HN,W,H,CW,CH,FS,XC,YC,RSC,HSC,IDX,CR,CG,CB,LI,PM,VG,COLS_STR={};
 function setup(){
-  const dpr=M.min(devicePixelRatio||1,2),wc=M.min(innerWidth-8,(innerHeight-60)*1.4),hc=wc/1.4;
-  ROWS=ROWS&~1;CH=hc/ROWS;COLS=M.round(wc/(CH*.55))&~1;CW=wc/COLS;W=wc;H=hc;FS=CH*.95;
+  const dpr=M.min(devicePixelRatio||1,coarse?1.5:2),wc=innerWidth,hc=innerHeight;
+  QR=QR&~1;HN=M.min(hc,wc/1.4);ROWS=M.max(2,M.round(hc*QR/HN));CH=hc/ROWS;COLS=M.round(wc/(CH*.55))&~1;CW=wc/COLS;W=wc;H=hc;FS=CH*.95;
   cv.style.width=W+'px';cv.style.height=H+'px';cv.width=W*dpr|0;cv.height=H*dpr|0;ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.font='bold '+FS+'px ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';
   const n=ROWS*COLS;XC=new Float32Array(n);YC=new Float32Array(n);RSC=new Float32Array(n);HSC=new Float32Array(n);
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const i=r*COLS+c;XC[i]=((c+.5)*CW-W/2)/H;YC[i]=((r+.5)*CH-H/2)/H;RSC[i]=M.hypot(XC[i],YC[i]);HSC[i]=hh(r,c)}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const i=r*COLS+c;XC[i]=((c+.5)*CW-W/2)/HN;YC[i]=((r+.5)*CH-H/2)/HN;RSC[i]=M.hypot(XC[i],YC[i]);HSC[i]=hh(r,c)}
   IDX=new Int16Array(n);CR=new Float32Array(n);CG=new Float32Array(n);CB=new Float32Array(n);LI=new Float32Array(n);PM=new Float32Array(n);VG=new Float32Array(n);
 }
 // timeline
@@ -66,7 +66,7 @@ function space(x,y,gh,hm,bt,t,amt,o){
   o[0]=r;o[1]=g;o[2]=b}
 // eye
 function eye(x,y,z,ou,gx,gy,Rp,t,F,o){
-  const iz=1/z,px=iz/ROWS,u=x*iz,v=y*iz,near=z<3.4,pu=u-gx,pv=v-gy,r=M.hypot(pu,pv);
+  const iz=1/z,px=iz*CH/HN,u=x*iz,v=y*iz,near=z<3.4,pu=u-gx,pv=v-gy,r=M.hypot(pu,pv);
   let s=0,du_in=1,dl_in=1,m_in=1,vt=v,vu=0,vl=0;
   if(near){s=u/WO;const sa=cl(s,-1.3,1.3),wu=sa<-.12?.88:1.12,cu=cl(1-((sa+.12)/wu)**2,0,1)**.8,cl_=cl(1-(sa-.08)**2,0,1)**.9;
     vt=v+.055*s;const vc=.03*cl_;vl=vc+(HL*cl_-vc)*(.35+.65*ou);vu=vl+(-HU*cu-vl)*ou;du_in=vt-vu;dl_in=vl-vt;m_in=cl(M.min(du_in,dl_in)/(1.6*px)+.5,0,1)}
@@ -110,13 +110,13 @@ function put(i,ch,r,g,b,a){IDX[i]=ch;CR[i]=r*a;CG[i]=g*a;CB[i]=b*a}
 const CI=c=>RAMP.indexOf(c);
 function stampStreak(s){
   const hx=s.x+s.vx*s.age,hy=s.y+s.vy*s.age,sp=M.hypot(s.vx,s.vy),dx=s.vx/sp,dy=s.vy/sp,fade=M.sin(M.PI*M.min(1,s.age/s.life))**.7;if(fade<.02)return;
-  const tc=M.abs(dy)<.38*M.abs(dx)?'-':M.abs(dx)<.38*M.abs(dy)?'|':dx*dy>0?'\\':'/',n=M.max(6,s.tail*H/(CW*.8)|0);
-  for(let k=0;k<n;k++){const f=k/n,c=(W/2+(hx-dx*s.tail*f)*H)/CW|0,r=(H/2+(hy-dy*s.tail*f)*H)/CH|0,b=(1-f)**1.3*fade;
+  const tc=M.abs(dy)<.38*M.abs(dx)?'-':M.abs(dx)<.38*M.abs(dy)?'|':dx*dy>0?'\\':'/',n=M.max(6,s.tail*HN/(CW*.8)|0);
+  for(let k=0;k<n;k++){const f=k/n,c=(W/2+(hx-dx*s.tail*f)*HN)/CW|0,r=(H/2+(hy-dy*s.tail*f)*HN)/CH|0,b=(1-f)**1.3*fade;
     if(b<.08||c<0||c>=COLS||r<0||r>=ROWS)continue;const i=r*COLS+c;if(PM[i]<.5)continue;
     put(i,CI(k==0?'@':b>.3?tc:'.'),.88,.94,1,M.min(1,.3+b)*VG[i])}}
 function stars(t,gs,amt,ox,oy){
   if(amt<=.003)return;
-  for(let j=0;j<NS;j++){const d=SD[j],c=(W*.5+(SX[j]*gs/d+ox)*H)/CW|0,r=(H*.5+(SY[j]*gs/d+oy)*H)/CH|0;
+  for(let j=0;j<NS;j++){const d=SD[j],c=(W*.5+(SX[j]*gs/d+ox)*HN)/CW|0,r=(H*.5+(SY[j]*gs/d+oy)*HN)/CH|0;
     if(c<0||c>=COLS||r<0||r>=ROWS)continue;const al=ss(1,.82,d)*(.8+.2*M.sin(t*SF[j]+SPH[j]))*amt;if(al<=.04)continue;
     const i=r*COLS+c;if(PM[i]<.5)continue;const b=SB[j]*al*(1+.05/d);if(b<=LI[i]*.7)continue;
     const col=SC[j],k=cl(.35+.9*b,0,1)*VG[i];put(i,b<.2?1:b<.42?CI('+'):CI('*'),col[0],col[1],col[2],k);
@@ -128,7 +128,7 @@ function stars(t,gs,amt,ox,oy){
 function frame(t,dt){
   S.last=t;const prog=ease((t-T_Z0)/T_ZD),idle=ease(t/T_Z0),z=M.exp(M.log(ZEND)*prog)*(1+.05*idle+.004*M.sin(t*.9)),
     zsp=t<T_SPACE?z:ZEND*M.exp(.03*(t-T_SPACE)),gs=M.min(6,GS0*zsp**1.25),gh=M.min(1.15,GS0*z**1.25),ou=lidOpen(t),[gx,gy]=gaze(t),
-    Rp=RP0*(.76+.24*ease((t-1.8)/3.5))*(1+.025*M.sin(1.9*t))*(1+.3*prog),Rps=Rp*z,full=Rps*.72>1.03,
+    Rp=RP0*(.76+.24*ease((t-1.8)/3.5))*(1+.025*M.sin(1.9*t))*(1+.3*prog),Rps=Rp*z,full=Rps*.72>1.2*M.hypot(W,H)/2/HN,
     starAmt=ease((t-(T_Z0+1.5))/4.5),nb=ease((t-(T_Z0+3.5))/8),hm=ease((t-T_HEART)/T_HEART_D),bt=1+.03*M.sin(t*2.6)*hm*hm,
     ox=gx*z,oy=gy*z,fadeIn=ease(t/1.2),F={ox,oy,gh,hm,bt,nb};
   update(t,dt,prog);
@@ -156,8 +156,11 @@ function loop(now){
   const dt=M.min(el/1000,.1);T+=dt;const t0=performance.now();frame(T,dt);draw();
   avg=avg*.9+(performance.now()-t0)*.1;
   if(avg>22){slow++;fast=0}else if(avg<9){fast++;slow=0}else slow=fast=0;
-  if(slow>20&&ROWS>16){ROWS-=4;slow=0;avg=14;setup()}else if(fast>240&&ROWS<MAXR){ROWS+=2;fast=0;setup()}}
+  if(slow>20&&QR>12){QR-=4;slow=0;avg=14;setup()}else if(fast>240&&QR<MAXR){QR+=2;fast=0;setup()}}
 function restart(){T=0;reset()}
-addEventListener('resize',setup);addEventListener('pointerdown',restart);addEventListener('keydown',e=>{if(e.key==='r'||e.key==='R')restart()});
+addEventListener('resize',setup);
+const fs=()=>{const e=document.documentElement,q=e.requestFullscreen||e.webkitRequestFullscreen;if(!q)return;if(document.fullscreenElement)document.exitFullscreen();else{const p=q.call(e);if(p&&p.catch)p.catch(()=>{})}};
+addEventListener('dblclick',fs);addEventListener('pointerdown',restart);
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='r')restart();if(k==='f')fs()});
 setup();reset();requestAnimationFrame(loop);
 </script></body></html>
