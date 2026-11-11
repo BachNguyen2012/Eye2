@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><title>Eye → Space</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eye">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>
 :root{--bg:#010203;--fg:#6a7d99}
@@ -8,8 +9,10 @@
 html,body{height:100%;margin:0;background:var(--bg)}
 body{overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 canvas{display:block;position:fixed;left:0;top:0}
+#fb{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));width:42px;height:42px;padding:0;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);color:var(--fg);font-size:22px;line-height:1;opacity:.6;z-index:2;cursor:pointer}
+#tip{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);width:max-content;max-width:84vw;padding:10px 14px;border-radius:10px;background:rgba(0,0,0,.75);color:#dbe4f0;font:13px/1.4 ui-sans-serif,system-ui,sans-serif;text-align:center;opacity:0;pointer-events:none;transition:opacity .3s;z-index:2}
 </style></head><body>
-<canvas id="c"></canvas>
+<canvas id="c"></canvas><button id="fb" aria-label="Toàn màn hình">⛶</button><div id="tip"></div>
 <script>
 const M=Math,TAU=M.PI*2,cv=document.getElementById('c'),ctx=cv.getContext('2d',{alpha:false});
 const rn32=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=M.imul(a^a>>>15,1|a);t=t+M.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
@@ -159,8 +162,16 @@ function loop(now){
   if(slow>20&&QR>12){QR-=4;slow=0;avg=14;setup()}else if(fast>240&&QR<MAXR){QR+=2;fast=0;setup()}}
 function restart(){T=0;reset()}
 addEventListener('resize',setup);
-const fs=()=>{const e=document.documentElement,q=e.requestFullscreen||e.webkitRequestFullscreen;if(!q)return;if(document.fullscreenElement)document.exitFullscreen();else{const p=q.call(e);if(p&&p.catch)p.catch(()=>{})}};
-addEventListener('dblclick',fs);addEventListener('pointerdown',restart);
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='r')restart();if(k==='f')fs()});
+const fb=document.getElementById('fb'),tip=document.getElementById('tip');
+function say(m){tip.textContent=m;tip.style.opacity=1;clearTimeout(say.t);say.t=setTimeout(()=>tip.style.opacity=0,5000)}
+const fs=quiet=>{const e=document.documentElement,q=e.requestFullscreen||e.webkitRequestFullscreen;
+  if(!q){if(!quiet)say('iPhone không hỗ trợ toàn màn hình trong Safari. Bấm Chia sẻ → Thêm vào Màn hình chính, rồi mở từ biểu tượng đó để xem toàn màn hình.');return}
+  if(document.fullscreenElement||document.webkitFullscreenElement)(document.exitFullscreen||document.webkitExitFullscreen).call(document);
+  else{const p=q.call(e);if(p&&p.catch)p.catch(()=>{})}};
+fb.addEventListener('pointerdown',e=>e.stopPropagation());
+fb.addEventListener('click',e=>{e.stopPropagation();fs(false)});
+if(navigator.standalone||matchMedia('(display-mode:standalone)').matches)fb.style.display='none';
+addEventListener('dblclick',()=>fs(true));addEventListener('pointerdown',restart);
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='r')restart();if(k==='f')fs(true)});
 setup();reset();requestAnimationFrame(loop);
 </script></body></html>
